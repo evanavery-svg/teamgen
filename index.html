@@ -7,35 +7,36 @@
 <title>Team Picker</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
 <style>
   :root {
-    --bg: #f3f5f1;
+    --bg: #f6f6f4;
     --surface: #ffffff;
-    --ink: #1b2420;
-    --muted: #5d6a63;
-    --line: #d8ded9;
-    --accent: #1f6b45;
-    --accent-ink: #ffffff;
-    --error: #b3261e;
-    --t1: #1f6b45; --t2: #2856a3; --t3: #b4521b; --t4: #7a3fa0;
-    --t5: #a8243d; --t6: #0f7c85; --t7: #8a6d0b; --t8: #4a5560;
+    --ink: #1a1a1a;
+    --muted: #767672;
+    --line: #e4e4e0;
+    --hover: #f0f0ed;
+    --primary: #1a1a1a;
+    --primary-ink: #ffffff;
+    --error: #c0392b;
+    --t1: #2f9e62; --t2: #3b73d9; --t3: #e0762f; --t4: #9054c9;
+    --t5: #d6455f; --t6: #1e9aa6; --t7: #c49a1a; --t8: #6b7682;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #121815; --surface: #1b2320; --ink: #e7ece8; --muted: #9aa8a0;
-      --line: #2e3833; --accent: #4fbf82; --accent-ink: #0c1410; --error: #f2877f;
-      --t1: #4fbf82; --t2: #7aa7f0; --t3: #f0955a; --t4: #c08ae6;
-      --t5: #f07a8f; --t6: #4ec6cf; --t7: #d9b84a; --t8: #a3b0bb;
+      --bg: #131313; --surface: #1c1c1c; --ink: #ededeb; --muted: #95958f;
+      --line: #2c2c2a; --hover: #252523; --primary: #ededeb; --primary-ink: #131313; --error: #f08a7e;
+      --t1: #52c285; --t2: #7aa4f0; --t3: #f0995a; --t4: #b98ae6;
+      --t5: #f07a90; --t6: #4ec3cd; --t7: #dcbb4f; --t8: #a0aab4;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #121815; --surface: #1b2320; --ink: #e7ece8; --muted: #9aa8a0;
-    --line: #2e3833; --accent: #4fbf82; --accent-ink: #0c1410; --error: #f2877f;
-    --t1: #4fbf82; --t2: #7aa7f0; --t3: #f0955a; --t4: #c08ae6;
-    --t5: #f07a8f; --t6: #4ec6cf; --t7: #d9b84a; --t8: #a3b0bb;
+    --bg: #131313; --surface: #1c1c1c; --ink: #ededeb; --muted: #95958f;
+    --line: #2c2c2a; --hover: #252523; --primary: #ededeb; --primary-ink: #131313; --error: #f08a7e;
+    --t1: #52c285; --t2: #7aa4f0; --t3: #f0995a; --t4: #b98ae6;
+    --t5: #f07a90; --t6: #4ec3cd; --t7: #dcbb4f; --t8: #a0aab4;
     color-scheme: dark;
   }
 
@@ -44,156 +45,162 @@
   body {
     background: var(--bg);
     color: var(--ink);
-    font: 16px/1.5 "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
-    padding: 32px 16px 48px;
+    font: 15px/1.5 "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 48px 16px 32px;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 28px; }
+  .wrap { max-width: 560px; margin: 0 auto; display: grid; gap: 32px; }
 
-  h1 {
-    font: 700 clamp(2.2rem, 6vw, 3.2rem)/1 "Barlow Condensed", "Arial Narrow", sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    margin: 0;
-    text-wrap: balance;
-  }
+  h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin: 0; }
   .lede { margin: 6px 0 0; color: var(--muted); }
 
-  form {
-    display: grid;
-    grid-template-columns: 1fr 220px;
-    gap: 20px;
-    align-items: start;
+  /* Input card */
+  form { display: grid; gap: 12px; }
+  .sr-label, .sr-only {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
   }
-  .field { display: grid; gap: 6px; }
-  label {
-    font: 600 0.8rem/1 "Barlow", system-ui, sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-  }
-  textarea, input[type="number"] {
+  textarea {
     width: 100%;
+    min-height: 200px;
+    resize: vertical;
     font: inherit;
+    line-height: 1.6;
     color: var(--ink);
     background: var(--surface);
     border: 1px solid var(--line);
-    border-radius: 6px;
-    padding: 10px 12px;
+    border-radius: 14px;
+    padding: 14px 16px;
+    transition: border-color .15s, box-shadow .15s;
   }
-  textarea { min-height: 220px; resize: vertical; }
-  textarea:focus, input:focus, button:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
-  }
-  .hint { font-size: 0.85rem; color: var(--muted); }
-  .hint-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+  textarea::placeholder { color: var(--muted); }
+  textarea:focus { outline: none; border-color: var(--ink); box-shadow: 0 0 0 3px var(--hover); }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+  .hint-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; padding: 0 4px; }
+  .hint { font-size: 0.85rem; color: var(--muted); font-variant-numeric: tabular-nums; }
   kbd {
-    font: 600 0.75rem/1 "Barlow", system-ui, sans-serif;
-    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+    font-family: inherit; font-size: 0.75rem; font-weight: 500; line-height: 1;
+    border: 1px solid var(--line); border-radius: 5px;
     padding: 2px 5px; background: var(--surface); color: var(--ink);
   }
   @media (hover: none) { .hint-row .hint + .hint { display: none; } }
-  .side { display: grid; gap: 16px; }
 
-  .stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
-  .stepper input { text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.2rem; }
-  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
-  .stepper input { -moz-appearance: textfield; }
+  .controls { display: flex; gap: 10px; align-items: stretch; }
 
-  button {
-    font: 600 1rem/1 "Barlow", system-ui, sans-serif;
-    border-radius: 6px;
-    cursor: pointer;
-    padding: 12px 16px;
-    border: 1px solid var(--line);
+  .stepper {
+    display: flex; align-items: center;
     background: var(--surface);
-    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 4px;
   }
+  .stepper button {
+    width: 36px; height: 36px; padding: 0;
+    border: 0; border-radius: 50%;
+    background: transparent;
+    font-size: 1.15rem; line-height: 1;
+  }
+  .stepper button:hover { background: var(--hover); }
+  .stepper input {
+    width: 3.2em; border: 0; background: transparent; color: var(--ink);
+    font-family: inherit; font-size: 1.05rem; font-weight: 600; line-height: 1;
+    text-align: center; font-variant-numeric: tabular-nums;
+    -moz-appearance: textfield;
+  }
+  .stepper input::-webkit-inner-spin-button, .stepper input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  .stepper-label { align-self: center; color: var(--muted); font-size: 0.9rem; padding-right: 4px; white-space: nowrap; }
+
   button {
-    transition: border-color .15s, background-color .15s, color .15s, transform .12s, filter .15s;
+    font: inherit;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    transition: background-color .15s, color .15s, border-color .15s, transform .12s, opacity .15s;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
   }
-  button:hover { border-color: var(--muted); }
   button:active { transform: scale(0.96); }
-  button:disabled { opacity: .5; cursor: default; transform: none; }
-  button:disabled:hover { border-color: var(--line); }
+  button:disabled { opacity: .4; cursor: default; transform: none; }
+
   .primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-ink);
-    font: 700 1.25rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    padding: 14px 16px;
+    flex: 1;
+    border: 0;
+    border-radius: 999px;
+    background: var(--primary);
+    color: var(--primary-ink);
+    padding: 12px 20px;
+    font-size: 1rem;
   }
-  .primary:hover { filter: brightness(1.08); border-color: var(--accent); }
-  .primary:active { transform: scale(0.97); }
+  .primary:hover { opacity: .88; }
 
-  .icon-btn { display: inline-flex; align-items: center; gap: 8px; }
-  .icon-btn svg { width: 16px; height: 16px; flex: none; }
-  .icon-btn.spin svg { animation: spin .5s cubic-bezier(.3,.7,.3,1); }
-  #copy.copied { color: var(--accent); border-color: var(--accent); }
-
-  .error { color: var(--error); font-weight: 500; margin: 0; }
-  .error-wrap {
-    display: grid; grid-template-rows: 0fr; opacity: 0; align-self: start;
-    transition: grid-template-rows .3s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
-  }
+  .error { color: var(--error); margin: 0; padding: 0 4px; font-size: 0.9rem; }
+  .error-wrap { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .3s cubic-bezier(.2,.8,.2,1), opacity .2s ease; }
   .error-wrap > p { overflow: hidden; min-height: 0; }
   .error-wrap.show { grid-template-rows: 1fr; opacity: 1; }
-  #copy span { display: inline-block; min-width: 5.9em; text-align: left; }
   .shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97); }
   .pop { animation: pop .25s ease-out; }
-  .summary { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; margin: 4px 0 0; }
 
-  .results-head {
-    display: flex; flex-wrap: wrap; gap: 12px;
-    align-items: center; justify-content: space-between;
+  /* Results */
+  #results { display: grid; gap: 14px; transition: opacity .2s; }
+  #results.stale { opacity: .35; }
+  #results.stale .teams { pointer-events: none; }
+
+  .results-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; padding: 0 4px; }
+  .results-head h2 { font-size: 1rem; font-weight: 600; margin: 0; display: inline; }
+  .summary { display: inline; color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; margin: 0 0 0 8px; }
+  .actions { display: flex; gap: 2px; margin-right: -8px; }
+  .icon-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 0; background: transparent; border-radius: 999px;
+    padding: 7px 10px; font-size: 0.9rem; color: var(--muted);
   }
-  .results-head h2 {
-    font: 700 1.5rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
-    text-transform: uppercase; letter-spacing: 0.04em; margin: 0;
-  }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .icon-btn:hover { background: var(--hover); color: var(--ink); }
+  .icon-btn svg { width: 15px; height: 15px; flex: none; }
+  .icon-btn.spin svg { animation: spin .5s cubic-bezier(.3,.7,.3,1); }
+  #copy span { display: inline-block; min-width: 5.6em; text-align: left; }
+  #copy.copied { color: var(--t1); }
 
   .teams {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
     align-items: start;
   }
   .team {
     background: var(--surface);
     border: 1px solid var(--line);
-    border-top: 6px solid var(--c);
-    border-radius: 6px;
+    border-radius: 14px;
     padding: 14px 16px 16px;
     transition: transform .2s ease, box-shadow .2s ease;
   }
   @media (hover: hover) {
-    .team:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--c); }
+    .team:hover { transform: translateY(-2px); box-shadow: 0 8px 20px -14px rgba(0,0,0,.35); }
   }
   .team h3 {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin: 0 0 10px;
-    font: 700 1.3rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
-    text-transform: uppercase; letter-spacing: 0.04em;
-    color: var(--c);
+    display: flex; align-items: center; gap: 8px;
+    margin: 0 0 8px;
+    font-size: 0.95rem; font-weight: 600;
+    white-space: nowrap;
+  }
+  .team h3::before {
+    content: ""; width: 9px; height: 9px; border-radius: 50%;
+    background: var(--c); flex: none;
   }
   .team h3 span {
-    font: 500 0.8rem/1 "Barlow", system-ui, sans-serif;
-    color: var(--muted); letter-spacing: 0.02em; text-transform: none;
+    margin-left: auto;
+    font-size: 0.8rem; font-weight: 400; color: var(--muted);
     font-variant-numeric: tabular-nums;
   }
-  .team ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
-  .team li { overflow-wrap: anywhere; border-radius: 4px; padding: 0 4px; margin-left: -4px; }
-  .team li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .team ol { margin: 0; padding-left: 1.5em; display: grid; gap: 2px; }
+  .team li { overflow-wrap: anywhere; border-radius: 6px; padding: 1px 6px; margin-left: -6px; }
+  .team li::marker { color: var(--muted); font-size: 0.85em; font-variant-numeric: tabular-nums; }
 
-  /* Stale results after an error: dimmed, not interactive */
-  #results { display: grid; gap: 16px; transition: opacity .2s; }
-  #results.stale { opacity: .4; }
-  #results.stale .teams { pointer-events: none; }
+  .site-footer {
+    display: flex; flex-wrap: wrap; gap: 4px 8px; justify-content: center;
+    font-size: 0.8rem; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
 
   /* Deal animation: cards rise in, then names land one by one in deal order */
   .teams.animate .team { animation: card-in .4s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--cd, 0ms); }
@@ -205,12 +212,9 @@
   .team li.moved { animation: flash 1.1s ease-out both; animation-delay: var(--d, 0ms); }
 
   @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
-  @keyframes name-in {
-    from { opacity: 0; transform: translateY(-12px) scale(.9); }
-    to { opacity: 1; transform: none; }
-  }
+  @keyframes name-in { from { opacity: 0; transform: translateY(-12px) scale(.9); } to { opacity: 1; transform: none; } }
   @keyframes flash {
-    from { background-color: color-mix(in srgb, var(--c) 24%, transparent); }
+    from { background-color: color-mix(in srgb, var(--c) 22%, transparent); }
     to { background-color: transparent; }
   }
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
@@ -221,32 +225,20 @@
     60% { transform: translateX(-4px); } 80% { transform: translateX(3px); }
   }
 
+  @media (max-width: 440px) {
+    body { padding-top: 32px; }
+    .team { padding: 12px 12px 14px; }
+    .team h3 { gap: 6px; }
+    .team h3 span { font-size: 0.75rem; }
+    .stepper-label { display: none; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: .01ms !important;
       animation-delay: 0ms !important;
       transition-duration: .01ms !important;
     }
-  }
-
-  .sr-only {
-    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
-    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
-  }
-
-  .site-footer {
-    display: flex; flex-wrap: wrap; gap: 4px 10px;
-    justify-content: center; text-align: center;
-    border-top: 1px solid var(--line);
-    padding-top: 16px;
-    font-size: 0.85rem;
-    color: var(--muted);
-    font-variant-numeric: tabular-nums;
-  }
-
-  @media (max-width: 640px) {
-    form { grid-template-columns: 1fr; }
-    textarea { min-height: 160px; }
   }
 </style>
 <!-- /page -->
@@ -256,31 +248,27 @@
 <div class="wrap">
   <header>
     <h1>Team Picker</h1>
-    <p class="lede">Enter the names, pick how many teams, and hit Make teams.</p>
+    <p class="lede">Add names, choose how many teams, and go.</p>
   </header>
 
   <form id="form" novalidate>
-    <div class="field">
-      <label for="names">Names</label>
-      <textarea id="names" spellcheck="false" placeholder="One name per line (commas work too)"></textarea>
-      <div class="hint-row">
-        <span class="hint" id="count" aria-live="polite">0 names</span>
-        <span class="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to make teams</span>
-      </div>
+    <label for="names" class="sr-label">Names</label>
+    <textarea id="names" spellcheck="false" placeholder="One name per line (commas work too)"></textarea>
+    <div class="hint-row">
+      <span class="hint" id="count" aria-live="polite">0 names</span>
+      <span class="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to make teams</span>
     </div>
 
-    <div class="side">
-      <div class="field">
-        <label for="teams">Number of teams</label>
-        <div class="stepper">
-          <button type="button" id="minus" aria-label="Fewer teams">−</button>
-          <input type="number" id="teams" min="1" value="2" inputmode="numeric">
-          <button type="button" id="plus" aria-label="More teams">+</button>
-        </div>
+    <div class="controls">
+      <div class="stepper">
+        <button type="button" id="minus" aria-label="Fewer teams">−</button>
+        <input type="number" id="teams" min="1" value="2" inputmode="numeric" aria-label="Number of teams">
+        <button type="button" id="plus" aria-label="More teams">+</button>
+        <span class="stepper-label" aria-hidden="true">teams</span>
       </div>
       <button type="submit" class="primary">Make teams</button>
-      <div class="error-wrap" id="errorWrap"><p class="error" id="error" role="alert"></p></div>
     </div>
+    <div class="error-wrap" id="errorWrap"><p class="error" id="error" role="alert"></p></div>
   </form>
 
   <section id="results" hidden>
@@ -290,8 +278,8 @@
         <p class="summary" id="summary"></p>
       </div>
       <div class="actions">
-        <button type="button" id="shuffle" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Shuffle again</span></button>
-        <button type="button" id="copy" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy teams</span></button>
+        <button type="button" id="shuffle" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Shuffle</span></button>
+        <button type="button" id="copy" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span></button>
       </div>
     </div>
     <div class="teams" id="teamList"></div>
@@ -301,7 +289,7 @@
   <footer class="site-footer">
     <span>© 2026 Avery</span>
     <span aria-hidden="true">·</span>
-    <span>v1.3</span>
+    <span>v1.4</span>
   </footer>
 </div>
 
@@ -611,11 +599,11 @@
     var text = teamsAsText();
     function done(ok) {
       clearTimeout(copyTimer);
-      copyLabel.textContent = ok ? 'Copied!' : 'Copy failed';
+      copyLabel.textContent = ok ? 'Copied' : 'Failed';
       copyBtn.classList.toggle('copied', ok);
       if (ok) replay(copyBtn, 'pop');
       copyTimer = setTimeout(function () {
-        copyLabel.textContent = 'Copy teams';
+        copyLabel.textContent = 'Copy';
         copyBtn.classList.remove('copied');
       }, 1600);
     }
