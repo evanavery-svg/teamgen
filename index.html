@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- page -->
+<title>Team Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+  :root {
+    --bg: #f3f5f1;
+    --surface: #ffffff;
+    --ink: #1b2420;
+    --muted: #5d6a63;
+    --line: #d8ded9;
+    --accent: #1f6b45;
+    --accent-ink: #ffffff;
+    --error: #b3261e;
+    --t1: #1f6b45; --t2: #2856a3; --t3: #b4521b; --t4: #7a3fa0;
+    --t5: #a8243d; --t6: #0f7c85; --t7: #8a6d0b; --t8: #4a5560;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121815; --surface: #1b2320; --ink: #e7ece8; --muted: #9aa8a0;
+      --line: #2e3833; --accent: #4fbf82; --accent-ink: #0c1410; --error: #f2877f;
+      --t1: #4fbf82; --t2: #7aa7f0; --t3: #f0955a; --t4: #c08ae6;
+      --t5: #f07a8f; --t6: #4ec6cf; --t7: #d9b84a; --t8: #a3b0bb;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #121815; --surface: #1b2320; --ink: #e7ece8; --muted: #9aa8a0;
+    --line: #2e3833; --accent: #4fbf82; --accent-ink: #0c1410; --error: #f2877f;
+    --t1: #4fbf82; --t2: #7aa7f0; --t3: #f0955a; --t4: #c08ae6;
+    --t5: #f07a8f; --t6: #4ec6cf; --t7: #d9b84a; --t8: #a3b0bb;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 16px/1.5 "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 32px 16px 48px;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; display: grid; gap: 28px; }
+
+  h1 {
+    font: 700 clamp(2.2rem, 6vw, 3.2rem)/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede { margin: 6px 0 0; color: var(--muted); }
+
+  form {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 20px;
+    align-items: start;
+  }
+  .field { display: grid; gap: 6px; }
+  label {
+    font: 600 0.8rem/1 "Barlow", system-ui, sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+  }
+  textarea, input[type="number"] {
+    width: 100%;
+    font: inherit;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  textarea { min-height: 220px; resize: vertical; }
+  textarea:focus, input:focus, button:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .hint { font-size: 0.85rem; color: var(--muted); }
+  .side { display: grid; gap: 16px; }
+
+  .stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
+  .stepper input { text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 1.2rem; }
+  .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+  .stepper input { -moz-appearance: textfield; }
+
+  button {
+    font: 600 1rem/1 "Barlow", system-ui, sans-serif;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink);
+  }
+  button:hover { border-color: var(--muted); }
+  .primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-ink);
+    font: 700 1.25rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 14px 16px;
+  }
+  .primary:hover { filter: brightness(1.08); border-color: var(--accent); }
+
+  .error { color: var(--error); font-weight: 500; margin: 0; }
+
+  .results-head {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    align-items: center; justify-content: space-between;
+  }
+  .results-head h2 {
+    font: 700 1.5rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    text-transform: uppercase; letter-spacing: 0.04em; margin: 0;
+  }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .teams {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+    align-items: start;
+  }
+  .team {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-top: 6px solid var(--c);
+    border-radius: 6px;
+    padding: 14px 16px 16px;
+  }
+  .team h3 {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin: 0 0 10px;
+    font: 700 1.3rem/1 "Barlow Condensed", "Arial Narrow", sans-serif;
+    text-transform: uppercase; letter-spacing: 0.04em;
+    color: var(--c);
+  }
+  .team h3 span {
+    font: 500 0.8rem/1 "Barlow", system-ui, sans-serif;
+    color: var(--muted); letter-spacing: 0.02em; text-transform: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .team ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
+  .team li { overflow-wrap: anywhere; }
+  .team li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  @media (max-width: 640px) {
+    form { grid-template-columns: 1fr; }
+    textarea { min-height: 160px; }
+  }
+</style>
+<!-- /page -->
+</head>
+<body>
+<!-- page -->
+<div class="wrap">
+  <header>
+    <h1>Team Picker</h1>
+    <p class="lede">Enter the names, pick how many teams, and hit Make teams.</p>
+  </header>
+
+  <form id="form" novalidate>
+    <div class="field">
+      <label for="names">Names</label>
+      <textarea id="names" spellcheck="false" placeholder="One name per line (commas work too)"></textarea>
+      <span class="hint" id="count">0 names</span>
+    </div>
+
+    <div class="side">
+      <div class="field">
+        <label for="teams">Number of teams</label>
+        <div class="stepper">
+          <button type="button" id="minus" aria-label="Fewer teams">−</button>
+          <input type="number" id="teams" min="1" value="2" inputmode="numeric">
+          <button type="button" id="plus" aria-label="More teams">+</button>
+        </div>
+      </div>
+      <button type="submit" class="primary">Make teams</button>
+      <p class="error" id="error" role="alert" hidden></p>
+    </div>
+  </form>
+
+  <section id="results" hidden>
+    <div class="results-head">
+      <h2>Teams</h2>
+      <div class="actions">
+        <button type="button" id="shuffle">Shuffle again</button>
+        <button type="button" id="copy">Copy teams</button>
+      </div>
+    </div>
+    <div class="teams" id="teamList"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var namesEl = document.getElementById('names');
+  var teamsEl = document.getElementById('teams');
+  var countEl = document.getElementById('count');
+  var errorEl = document.getElementById('error');
+  var resultsEl = document.getElementById('results');
+  var listEl = document.getElementById('teamList');
+  var copyBtn = document.getElementById('copy');
+  var COLORS = 8;
+  var lastTeams = [];
+
+  var SAMPLE = 'Alex\nJordan\nSam\nTaylor\nRiley\nMorgan\nCasey\nJamie\nQuinn\nAvery';
+
+  function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+  function save(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+
+  function parseNames() {
+    return namesEl.value
+      .split(/[\n,]+/)
+      .map(function (s) { return s.trim(); })
+      .filter(Boolean);
+  }
+
+  function updateCount() {
+    var n = parseNames().length;
+    countEl.textContent = n + (n === 1 ? ' name' : ' names');
+  }
+
+  function randInt(max) {
+    if (window.crypto && crypto.getRandomValues) {
+      var buf = new Uint32Array(1);
+      crypto.getRandomValues(buf);
+      return buf[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = randInt(i + 1);
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+
+  // Deal shuffled names round-robin so team sizes differ by at most one.
+  function makeTeams(names, count) {
+    var teams = [];
+    for (var i = 0; i < count; i++) teams.push([]);
+    shuffle(names).forEach(function (name, i) { teams[i % count].push(name); });
+    return shuffle(teams);
+  }
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = !msg;
+  }
+
+  function render(teams) {
+    listEl.innerHTML = '';
+    teams.forEach(function (members, i) {
+      var card = document.createElement('div');
+      card.className = 'team';
+      card.style.setProperty('--c', 'var(--t' + ((i % COLORS) + 1) + ')');
+      var h = document.createElement('h3');
+      h.textContent = 'Team ' + (i + 1);
+      var size = document.createElement('span');
+      size.textContent = members.length + (members.length === 1 ? ' player' : ' players');
+      h.appendChild(size);
+      var ol = document.createElement('ol');
+      members.forEach(function (m) {
+        var li = document.createElement('li');
+        li.textContent = m;
+        ol.appendChild(li);
+      });
+      card.appendChild(h);
+      card.appendChild(ol);
+      listEl.appendChild(card);
+    });
+    resultsEl.hidden = false;
+  }
+
+  function generate() {
+    var names = parseNames();
+    var count = parseInt(teamsEl.value, 10);
+    if (names.length === 0) return showError('Add at least one name.');
+    if (!count || count < 1) return showError('Number of teams must be 1 or more.');
+    if (count > names.length) {
+      return showError('You have ' + names.length + ' name' + (names.length === 1 ? '' : 's') +
+        ' but asked for ' + count + ' teams. Lower the team count or add more names.');
+    }
+    showError('');
+    save('teamgen.names', namesEl.value);
+    save('teamgen.teams', String(count));
+    lastTeams = makeTeams(names, count);
+    render(lastTeams);
+  }
+
+  function teamsAsText() {
+    return lastTeams.map(function (members, i) {
+      return 'Team ' + (i + 1) + ': ' + members.join(', ');
+    }).join('\n');
+  }
+
+  function step(delta) {
+    var v = parseInt(teamsEl.value, 10) || 1;
+    teamsEl.value = Math.max(1, v + delta);
+  }
+
+  document.getElementById('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    generate();
+  });
+  document.getElementById('shuffle').addEventListener('click', generate);
+  document.getElementById('minus').addEventListener('click', function () { step(-1); });
+  document.getElementById('plus').addEventListener('click', function () { step(1); });
+  namesEl.addEventListener('input', updateCount);
+
+  copyBtn.addEventListener('click', function () {
+    var text = teamsAsText();
+    function done(msg) {
+      copyBtn.textContent = msg;
+      setTimeout(function () { copyBtn.textContent = 'Copy teams'; }, 1500);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done('Copied'); }, fallback);
+    } else {
+      fallback();
+    }
+    function fallback() {
+      var tmp = document.createElement('textarea');
+      tmp.value = text;
+      tmp.setAttribute('readonly', '');
+      tmp.style.position = 'fixed';
+      tmp.style.opacity = '0';
+      document.body.appendChild(tmp);
+      tmp.select();
+      var ok = false;
+      try { ok = document.execCommand('copy'); } catch (e) {}
+      document.body.removeChild(tmp);
+      done(ok ? 'Copied' : 'Copy failed');
+    }
+  });
+
+  namesEl.value = load('teamgen.names') || SAMPLE;
+  teamsEl.value = load('teamgen.teams') || '2';
+  updateCount();
+  generate();
+})();
+</script>
+<!-- /page -->
+</body>
+</html>
