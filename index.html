@@ -102,7 +102,15 @@
     background: var(--surface);
     color: var(--ink);
   }
+  button {
+    transition: border-color .15s, background-color .15s, color .15s, transform .12s, filter .15s;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
   button:hover { border-color: var(--muted); }
+  button:active { transform: scale(0.96); }
+  button:disabled { opacity: .5; cursor: default; transform: none; }
+  button:disabled:hover { border-color: var(--line); }
   .primary {
     background: var(--accent);
     border-color: var(--accent);
@@ -113,8 +121,17 @@
     padding: 14px 16px;
   }
   .primary:hover { filter: brightness(1.08); border-color: var(--accent); }
+  .primary:active { transform: scale(0.97); }
+
+  .icon-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .icon-btn svg { width: 16px; height: 16px; flex: none; }
+  .icon-btn.spin svg { animation: spin .5s cubic-bezier(.3,.7,.3,1); }
+  #copy.copied { color: var(--accent); border-color: var(--accent); }
 
   .error { color: var(--error); font-weight: 500; margin: 0; }
+  .shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97); }
+  .pop { animation: pop .25s ease-out; }
+  .summary { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; margin: 4px 0 0; }
 
   .results-head {
     display: flex; flex-wrap: wrap; gap: 12px;
@@ -138,6 +155,10 @@
     border-top: 6px solid var(--c);
     border-radius: 6px;
     padding: 14px 16px 16px;
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  @media (hover: hover) {
+    .team:hover { transform: translateY(-2px); box-shadow: 0 6px 18px -10px var(--c); }
   }
   .team h3 {
     display: flex; justify-content: space-between; align-items: baseline;
@@ -152,8 +173,47 @@
     font-variant-numeric: tabular-nums;
   }
   .team ol { margin: 0; padding-left: 1.4em; display: grid; gap: 4px; }
-  .team li { overflow-wrap: anywhere; }
+  .team li { overflow-wrap: anywhere; border-radius: 4px; padding: 0 4px; margin-left: -4px; }
   .team li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  /* Stale results after an error: dimmed, not interactive */
+  #results { display: grid; gap: 16px; transition: opacity .2s; }
+  #results.stale { opacity: .4; }
+  #results.stale .teams { pointer-events: none; }
+
+  /* Deal animation: cards rise in, then names land one by one in deal order */
+  .teams.animate .team { animation: card-in .4s cubic-bezier(.2,.8,.2,1) both; animation-delay: var(--cd, 0ms); }
+  .teams.animate li {
+    animation: name-in .42s cubic-bezier(.2,.9,.3,1.2) both, flash .9s ease-out both;
+    animation-delay: var(--d, 0ms), var(--d, 0ms);
+  }
+  .teams.animate .team h3 span { animation: fade-in .3s ease both; animation-delay: var(--sd, 0ms); }
+  .teams.leaving .team { transition: opacity .16s ease, transform .16s ease; opacity: 0; transform: translateY(-6px) scale(.97); }
+
+  @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+  @keyframes name-in {
+    from { opacity: 0; transform: translateY(-12px) scale(.9); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes flash {
+    from { background-color: color-mix(in srgb, var(--c) 24%, transparent); }
+    to { background-color: transparent; }
+  }
+  @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop { 40% { transform: scale(1.12); } }
+  @keyframes shake {
+    20% { transform: translateX(-6px); } 40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); } 80% { transform: translateX(3px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: .01ms !important;
+    }
+  }
 
   .site-footer {
     display: flex; flex-wrap: wrap; gap: 8px 16px;
@@ -177,14 +237,14 @@
 <div class="wrap">
   <header>
     <h1>Team Picker</h1>
-    <p class="lede">Enter the names, pick how many teams, and hit Make teams.</p>
+    <p class="lede">Enter the names, pick how many teams, and hit Make teams. Ctrl or ⌘ + Enter works from the names box too.</p>
   </header>
 
   <form id="form" novalidate>
     <div class="field">
       <label for="names">Names</label>
       <textarea id="names" spellcheck="false" placeholder="One name per line (commas work too)"></textarea>
-      <span class="hint" id="count">0 names</span>
+      <span class="hint" id="count" aria-live="polite">0 names</span>
     </div>
 
     <div class="side">
@@ -203,10 +263,13 @@
 
   <section id="results" hidden>
     <div class="results-head">
-      <h2>Teams</h2>
+      <div>
+        <h2>Teams</h2>
+        <p class="summary" id="summary"></p>
+      </div>
       <div class="actions">
-        <button type="button" id="shuffle">Shuffle again</button>
-        <button type="button" id="copy">Copy teams</button>
+        <button type="button" id="shuffle" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/></svg><span>Shuffle again</span></button>
+        <button type="button" id="copy" class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy teams</span></button>
       </div>
     </div>
     <div class="teams" id="teamList"></div>
@@ -214,26 +277,42 @@
 
   <footer class="site-footer">
     <span>© 2026 Avery</span>
-    <span>v1.0</span>
+    <span>v1.1</span>
   </footer>
 </div>
 
 <script>
 (function () {
-  var namesEl = document.getElementById('names');
-  var teamsEl = document.getElementById('teams');
-  var countEl = document.getElementById('count');
-  var errorEl = document.getElementById('error');
-  var resultsEl = document.getElementById('results');
-  var listEl = document.getElementById('teamList');
-  var copyBtn = document.getElementById('copy');
+  function $(id) { return document.getElementById(id); }
+  var namesEl = $('names');
+  var teamsEl = $('teams');
+  var countEl = $('count');
+  var errorEl = $('error');
+  var resultsEl = $('results');
+  var listEl = $('teamList');
+  var summaryEl = $('summary');
+  var shuffleBtn = $('shuffle');
+  var copyBtn = $('copy');
+  var copyLabel = copyBtn.querySelector('span');
   var COLORS = 8;
   var lastTeams = [];
+  var leaveTimer = 0, animTimer = 0, copyTimer = 0, saveTimer = 0;
+  var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
   var SAMPLE = 'Alex\nJordan\nSam\nTaylor\nRiley\nMorgan\nCasey\nJamie\nQuinn\nAvery';
 
+  function motionOK() { return !(reduceMotion && reduceMotion.matches); }
   function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function save(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+  function plural(n, word) { return n + ' ' + word + (n === 1 ? '' : 's'); }
+
+  // Restart a one-shot CSS animation class on an element.
+  function replay(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth;
+    el.classList.add(cls);
+    el.addEventListener('animationend', function () { el.classList.remove(cls); }, { once: true });
+  }
 
   function parseNames() {
     return namesEl.value
@@ -243,14 +322,22 @@
   }
 
   function updateCount() {
-    var n = parseNames().length;
-    countEl.textContent = n + (n === 1 ? ' name' : ' names');
+    var names = parseNames();
+    var seen = {}, repeats = 0;
+    names.forEach(function (n) {
+      var key = n.toLowerCase();
+      if (seen[key]) repeats++; else seen[key] = true;
+    });
+    countEl.textContent = plural(names.length, 'name') + (repeats ? ' · ' + repeats + ' repeated' : '');
+    teamsEl.max = Math.max(1, names.length);
   }
 
+  // Unbiased random integer in [0, max) using rejection sampling.
   function randInt(max) {
     if (window.crypto && crypto.getRandomValues) {
       var buf = new Uint32Array(1);
-      crypto.getRandomValues(buf);
+      var limit = 4294967296 - (4294967296 % max);
+      do { crypto.getRandomValues(buf); } while (buf[0] >= limit);
       return buf[0] % max;
     }
     return Math.floor(Math.random() * max);
@@ -265,7 +352,8 @@
     return a;
   }
 
-  // Deal shuffled names round-robin so team sizes differ by at most one.
+  // Deal shuffled names round-robin so team sizes differ by at most one,
+  // then shuffle team order so the bigger teams aren't always first.
   function makeTeams(names, count) {
     var teams = [];
     for (var i = 0; i < count; i++) teams.push([]);
@@ -276,10 +364,19 @@
   function showError(msg) {
     errorEl.textContent = msg;
     errorEl.hidden = !msg;
+    resultsEl.classList.toggle('stale', !!msg);
+    copyBtn.disabled = !!msg;
+    if (msg) replay(errorEl, 'shake');
   }
 
-  function render(teams) {
-    listEl.innerHTML = '';
+  function render(teams, animate) {
+    clearTimeout(animTimer);
+    listEl.classList.remove('animate', 'leaving');
+
+    var frag = document.createDocumentFragment();
+    var lists = [], sizes = [];
+    var total = 0, longest = 0;
+
     teams.forEach(function (members, i) {
       var card = document.createElement('div');
       card.className = 'team';
@@ -287,7 +384,7 @@
       var h = document.createElement('h3');
       h.textContent = 'Team ' + (i + 1);
       var size = document.createElement('span');
-      size.textContent = members.length + (members.length === 1 ? ' player' : ' players');
+      size.textContent = plural(members.length, 'player');
       h.appendChild(size);
       var ol = document.createElement('ol');
       members.forEach(function (m) {
@@ -297,25 +394,79 @@
       });
       card.appendChild(h);
       card.appendChild(ol);
-      listEl.appendChild(card);
+      frag.appendChild(card);
+      lists.push(ol.children);
+      sizes.push(size);
+      total += members.length;
+      longest = Math.max(longest, members.length);
+      if (animate) card.style.setProperty('--cd', Math.round(i * Math.min(60, 360 / teams.length)) + 'ms');
     });
+
+    if (animate) {
+      // Names land in the same order a dealer would hand them out:
+      // one to each team, round after round.
+      var step = Math.max(22, Math.min(70, 1100 / total));
+      var base = 180, order = 0, end = base;
+      for (var row = 0; row < longest; row++) {
+        for (var t = 0; t < lists.length; t++) {
+          var li = lists[t][row];
+          if (!li) continue;
+          var d = Math.round(base + order++ * step);
+          li.style.setProperty('--d', d + 'ms');
+          sizes[t].style.setProperty('--sd', d + 'ms');
+          end = d;
+        }
+      }
+    }
+
+    listEl.textContent = '';
+    listEl.appendChild(frag);
     resultsEl.hidden = false;
+
+    if (animate) {
+      void listEl.offsetWidth;
+      listEl.classList.add('animate');
+      // Drop the animation class once finished so hover effects work normally.
+      animTimer = setTimeout(function () { listEl.classList.remove('animate'); }, end + 1000);
+    }
   }
 
-  function generate() {
+  function generate(opts) {
+    opts = opts || {};
     var names = parseNames();
     var count = parseInt(teamsEl.value, 10);
     if (names.length === 0) return showError('Add at least one name.');
     if (!count || count < 1) return showError('Number of teams must be 1 or more.');
     if (count > names.length) {
-      return showError('You have ' + names.length + ' name' + (names.length === 1 ? '' : 's') +
-        ' but asked for ' + count + ' teams. Lower the team count or add more names.');
+      return showError('You have ' + plural(names.length, 'name') + ' but asked for ' + count +
+        ' teams. Lower the team count or add more names.');
     }
     showError('');
+    teamsEl.value = count;
     save('teamgen.names', namesEl.value);
     save('teamgen.teams', String(count));
     lastTeams = makeTeams(names, count);
-    render(lastTeams);
+    summaryEl.textContent = plural(names.length, 'name') + ' · ' + plural(count, 'team');
+
+    var animate = opts.animate && motionOK();
+    clearTimeout(leaveTimer);
+    if (animate && !resultsEl.hidden && listEl.children.length) {
+      // Sweep the old teams away before dealing the new ones.
+      clearTimeout(animTimer);
+      listEl.classList.remove('animate');
+      listEl.classList.add('leaving');
+      leaveTimer = setTimeout(function () { render(lastTeams, true); }, 170);
+    } else {
+      render(lastTeams, animate);
+    }
+
+    if (opts.scroll) {
+      requestAnimationFrame(function () {
+        if (resultsEl.getBoundingClientRect().top > window.innerHeight * 0.7) {
+          resultsEl.scrollIntoView({ behavior: motionOK() ? 'smooth' : 'auto', block: 'start' });
+        }
+      });
+    }
   }
 
   function teamsAsText() {
@@ -325,29 +476,54 @@
   }
 
   function step(delta) {
+    var max = Math.max(1, parseNames().length);
     var v = parseInt(teamsEl.value, 10) || 1;
-    teamsEl.value = Math.max(1, v + delta);
+    var next = Math.min(Math.max(1, v + delta), max);
+    if (next !== v) {
+      teamsEl.value = next;
+      replay(teamsEl, 'pop');
+    }
   }
 
-  document.getElementById('form').addEventListener('submit', function (e) {
+  $('form').addEventListener('submit', function (e) {
     e.preventDefault();
-    generate();
+    generate({ animate: true, scroll: true });
   });
-  document.getElementById('shuffle').addEventListener('click', generate);
-  document.getElementById('minus').addEventListener('click', function () { step(-1); });
-  document.getElementById('plus').addEventListener('click', function () { step(1); });
-  namesEl.addEventListener('input', updateCount);
+  shuffleBtn.addEventListener('click', function () {
+    replay(shuffleBtn, 'spin');
+    generate({ animate: true });
+  });
+  $('minus').addEventListener('click', function () { step(-1); });
+  $('plus').addEventListener('click', function () { step(1); });
+  teamsEl.addEventListener('change', function () {
+    var v = parseInt(teamsEl.value, 10);
+    if (v >= 1) teamsEl.value = v;
+  });
+
+  namesEl.addEventListener('input', function () {
+    updateCount();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () { save('teamgen.names', namesEl.value); }, 400);
+  });
+  namesEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+      e.preventDefault();
+      generate({ animate: true, scroll: true });
+    }
+  });
 
   copyBtn.addEventListener('click', function () {
+    if (!lastTeams.length) return;
     var text = teamsAsText();
-    function done(msg) {
-      copyBtn.textContent = msg;
-      setTimeout(function () { copyBtn.textContent = 'Copy teams'; }, 1500);
-    }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () { done('Copied'); }, fallback);
-    } else {
-      fallback();
+    function done(ok) {
+      clearTimeout(copyTimer);
+      copyLabel.textContent = ok ? 'Copied!' : 'Copy failed';
+      copyBtn.classList.toggle('copied', ok);
+      if (ok) replay(copyBtn, 'pop');
+      copyTimer = setTimeout(function () {
+        copyLabel.textContent = 'Copy teams';
+        copyBtn.classList.remove('copied');
+      }, 1600);
     }
     function fallback() {
       var tmp = document.createElement('textarea');
@@ -360,12 +536,19 @@
       var ok = false;
       try { ok = document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(tmp);
-      done(ok ? 'Copied' : 'Copy failed');
+      copyBtn.focus();
+      done(ok);
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, fallback);
+    } else {
+      fallback();
     }
   });
 
-  namesEl.value = load('teamgen.names') || SAMPLE;
-  teamsEl.value = load('teamgen.teams') || '2';
+  var storedNames = load('teamgen.names');
+  namesEl.value = storedNames && storedNames.trim() ? storedNames : SAMPLE;
+  teamsEl.value = Math.max(1, parseInt(load('teamgen.teams'), 10) || 2);
   updateCount();
   generate();
 })();
