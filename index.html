@@ -129,6 +129,13 @@
   #copy.copied { color: var(--accent); border-color: var(--accent); }
 
   .error { color: var(--error); font-weight: 500; margin: 0; }
+  .error-wrap {
+    display: grid; grid-template-rows: 0fr; opacity: 0; align-self: start;
+    transition: grid-template-rows .3s cubic-bezier(.2,.8,.2,1), opacity .2s ease;
+  }
+  .error-wrap > p { overflow: hidden; min-height: 0; }
+  .error-wrap.show { grid-template-rows: 1fr; opacity: 1; }
+  #copy span { display: inline-block; min-width: 5.9em; text-align: left; }
   .shake { animation: shake .4s cubic-bezier(.36,.07,.19,.97); }
   .pop { animation: pop .25s ease-out; }
   .summary { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; margin: 4px 0 0; }
@@ -188,7 +195,7 @@
     animation-delay: var(--d, 0ms), var(--d, 0ms);
   }
   .teams.animate .team h3 span { animation: fade-in .3s ease both; animation-delay: var(--sd, 0ms); }
-  .teams.leaving .team { transition: opacity .16s ease, transform .16s ease; opacity: 0; transform: translateY(-6px) scale(.97); }
+  .team li.moved { animation: flash 1.1s ease-out both; animation-delay: var(--d, 0ms); }
 
   @keyframes card-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
   @keyframes name-in {
@@ -257,7 +264,7 @@
         </div>
       </div>
       <button type="submit" class="primary">Make teams</button>
-      <p class="error" id="error" role="alert" hidden></p>
+      <div class="error-wrap" id="errorWrap"><p class="error" id="error" role="alert"></p></div>
     </div>
   </form>
 
@@ -277,7 +284,7 @@
 
   <footer class="site-footer">
     <span>© 2026 Avery</span>
-    <span>v1.1</span>
+    <span>v1.2</span>
   </footer>
 </div>
 
@@ -288,6 +295,7 @@
   var teamsEl = $('teams');
   var countEl = $('count');
   var errorEl = $('error');
+  var errorWrap = $('errorWrap');
   var resultsEl = $('results');
   var listEl = $('teamList');
   var summaryEl = $('summary');
@@ -296,7 +304,7 @@
   var copyLabel = copyBtn.querySelector('span');
   var COLORS = 8;
   var lastTeams = [];
-  var leaveTimer = 0, animTimer = 0, copyTimer = 0, saveTimer = 0;
+  var animTimer = 0, copyTimer = 0, saveTimer = 0;
   var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
 
   var SAMPLE = 'Alex\nJordan\nSam\nTaylor\nRiley\nMorgan\nCasey\nJamie\nQuinn\nAvery';
@@ -362,8 +370,8 @@
   }
 
   function showError(msg) {
-    errorEl.textContent = msg;
-    errorEl.hidden = !msg;
+    if (msg) errorEl.textContent = msg;
+    errorWrap.classList.toggle('show', !!msg);
     resultsEl.classList.toggle('stale', !!msg);
     copyBtn.disabled = !!msg;
     if (msg) replay(errorEl, 'shake');
@@ -371,7 +379,7 @@
 
   function render(teams, animate) {
     clearTimeout(animTimer);
-    listEl.classList.remove('animate', 'leaving');
+    listEl.classList.remove('animate');
 
     var frag = document.createDocumentFragment();
     var lists = [], sizes = [];
@@ -380,6 +388,7 @@
     teams.forEach(function (members, i) {
       var card = document.createElement('div');
       card.className = 'team';
+      card.dataset.i = i;
       card.style.setProperty('--c', 'var(--t' + ((i % COLORS) + 1) + ')');
       var h = document.createElement('h3');
       h.textContent = 'Team ' + (i + 1);
@@ -431,6 +440,70 @@
     }
   }
 
+  var EASE = 'cubic-bezier(.22,.8,.24,1)';
+
+  // Count repeats so duplicate names each get their own identity.
+  function keyer() {
+    var seen = {};
+    return function (name) { seen[name] = (seen[name] || 0) + 1; return name + '\u0000' + seen[name]; };
+  }
+
+  // Remember where every card and name currently sits on screen.
+  function snapshot() {
+    var key = keyer(), names = {}, cards = [];
+    Array.prototype.forEach.call(listEl.children, function (card) {
+      cards.push(card.getBoundingClientRect().height);
+      Array.prototype.forEach.call(card.querySelectorAll('li'), function (li) {
+        names[key(li.textContent)] = { rect: li.getBoundingClientRect(), team: card.dataset.i };
+      });
+    });
+    return { names: names, cards: cards };
+  }
+
+  // FLIP: after re-rendering, start each name at its old position and let it
+  // slide to the new one. Cards ease to their new height.
+  function glide(prev) {
+    var key = keyer(), moves = [], cardMoves = [], order = 0;
+    // Measure everything first, before any animation shifts the layout.
+    Array.prototype.forEach.call(listEl.children, function (card, ci) {
+      cardMoves.push({ el: card, from: prev.cards[ci], to: card.getBoundingClientRect().height, ci: ci });
+      Array.prototype.forEach.call(card.querySelectorAll('li'), function (li) {
+        var old = prev.names[key(li.textContent)];
+        moves.push({ el: li, old: old, rect: li.getBoundingClientRect(), switched: old && old.team !== card.dataset.i });
+      });
+    });
+    var newCards = 0;
+    cardMoves.forEach(function (m) {
+      if (m.from == null) {
+        m.el.animate(
+          [{ opacity: 0, transform: 'translateY(14px) scale(.96)' }, { opacity: 1, transform: 'none' }],
+          { duration: 420, easing: EASE, delay: 60 * newCards++, fill: 'backwards' });
+      } else if (Math.abs(m.from - m.to) > 1) {
+        m.el.animate([{ height: m.from + 'px' }, { height: m.to + 'px' }], { duration: 520, easing: EASE });
+      }
+    });
+    var stagger = Math.max(6, Math.min(18, 360 / Math.max(1, moves.length)));
+    moves.forEach(function (m) {
+      var delay = Math.round(order++ * stagger);
+      if (!m.old) {
+        m.el.animate(
+          [{ opacity: 0, transform: 'translateY(-10px) scale(.9)' }, { opacity: 1, transform: 'none' }],
+          { duration: 420, easing: EASE, delay: 200 + delay, fill: 'backwards' });
+        return;
+      }
+      var dx = m.old.rect.left - m.rect.left, dy = m.old.rect.top - m.rect.top;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        m.el.animate(
+          [{ transform: 'translate(' + dx + 'px,' + dy + 'px)' }, { transform: 'none' }],
+          { duration: 700, easing: EASE, delay: delay, fill: 'backwards' });
+      }
+      if (m.switched) {
+        m.el.style.setProperty('--d', (delay + 380) + 'ms');
+        m.el.classList.add('moved');
+      }
+    });
+  }
+
   function generate(opts) {
     opts = opts || {};
     var names = parseNames();
@@ -449,14 +522,13 @@
     summaryEl.textContent = plural(names.length, 'name') + ' · ' + plural(count, 'team');
 
     var animate = opts.animate && motionOK();
-    clearTimeout(leaveTimer);
     if (animate && !resultsEl.hidden && listEl.children.length) {
-      // Sweep the old teams away before dealing the new ones.
-      clearTimeout(animTimer);
-      listEl.classList.remove('animate');
-      listEl.classList.add('leaving');
-      leaveTimer = setTimeout(function () { render(lastTeams, true); }, 170);
+      // Teams already on screen: glide every name to its new spot.
+      var prev = snapshot();
+      render(lastTeams, false);
+      glide(prev);
     } else {
+      // First time: deal the names out one by one.
       render(lastTeams, animate);
     }
 
