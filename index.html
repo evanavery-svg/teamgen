@@ -86,6 +86,13 @@
     outline-offset: 2px;
   }
   .hint { font-size: 0.85rem; color: var(--muted); }
+  .hint-row { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; }
+  kbd {
+    font: 600 0.75rem/1 "Barlow", system-ui, sans-serif;
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px;
+    padding: 2px 5px; background: var(--surface); color: var(--ink);
+  }
+  @media (hover: none) { .hint-row .hint + .hint { display: none; } }
   .side { display: grid; gap: 16px; }
 
   .stepper { display: grid; grid-template-columns: 44px 1fr 44px; gap: 6px; }
@@ -222,9 +229,14 @@
     }
   }
 
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+  }
+
   .site-footer {
-    display: flex; flex-wrap: wrap; gap: 8px 16px;
-    justify-content: space-between;
+    display: flex; flex-wrap: wrap; gap: 4px 10px;
+    justify-content: center; text-align: center;
     border-top: 1px solid var(--line);
     padding-top: 16px;
     font-size: 0.85rem;
@@ -244,14 +256,17 @@
 <div class="wrap">
   <header>
     <h1>Team Picker</h1>
-    <p class="lede">Enter the names, pick how many teams, and hit Make teams. Ctrl or ⌘ + Enter works from the names box too.</p>
+    <p class="lede">Enter the names, pick how many teams, and hit Make teams.</p>
   </header>
 
   <form id="form" novalidate>
     <div class="field">
       <label for="names">Names</label>
       <textarea id="names" spellcheck="false" placeholder="One name per line (commas work too)"></textarea>
-      <span class="hint" id="count" aria-live="polite">0 names</span>
+      <div class="hint-row">
+        <span class="hint" id="count" aria-live="polite">0 names</span>
+        <span class="hint"><kbd>Ctrl</kbd> + <kbd>Enter</kbd> to make teams</span>
+      </div>
     </div>
 
     <div class="side">
@@ -280,11 +295,13 @@
       </div>
     </div>
     <div class="teams" id="teamList"></div>
+    <p class="sr-only" id="status" aria-live="polite"></p>
   </section>
 
   <footer class="site-footer">
     <span>© 2026 Avery</span>
-    <span>v1.2</span>
+    <span aria-hidden="true">·</span>
+    <span>v1.3</span>
   </footer>
 </div>
 
@@ -299,6 +316,7 @@
   var resultsEl = $('results');
   var listEl = $('teamList');
   var summaryEl = $('summary');
+  var statusEl = $('status');
   var shuffleBtn = $('shuffle');
   var copyBtn = $('copy');
   var copyLabel = copyBtn.querySelector('span');
@@ -414,7 +432,7 @@
     if (animate) {
       // Names land in the same order a dealer would hand them out:
       // one to each team, round after round.
-      var step = Math.max(22, Math.min(70, 1100 / total));
+      var step = Math.min(70, 1100 / total);
       var base = 180, order = 0, end = base;
       for (var row = 0; row < longest; row++) {
         for (var t = 0; t < lists.length; t++) {
@@ -451,10 +469,13 @@
   // Remember where every card and name currently sits on screen.
   function snapshot() {
     var key = keyer(), names = {}, cards = [];
+    var dealing = listEl.classList.contains('animate');
     Array.prototype.forEach.call(listEl.children, function (card) {
       cards.push(card.getBoundingClientRect().height);
       Array.prototype.forEach.call(card.querySelectorAll('li'), function (li) {
-        names[key(li.textContent)] = { rect: li.getBoundingClientRect(), team: card.dataset.i };
+        var k = key(li.textContent);
+        if (dealing && parseFloat(getComputedStyle(li).opacity) < 0.5) return;
+        names[k] = { rect: li.getBoundingClientRect(), team: card.dataset.i };
       });
     });
     return { names: names, cards: cards };
@@ -482,7 +503,7 @@
         m.el.animate([{ height: m.from + 'px' }, { height: m.to + 'px' }], { duration: 520, easing: EASE });
       }
     });
-    var stagger = Math.max(6, Math.min(18, 360 / Math.max(1, moves.length)));
+    var stagger = Math.min(18, 360 / Math.max(1, moves.length));
     moves.forEach(function (m) {
       var delay = Math.round(order++ * stagger);
       if (!m.old) {
@@ -520,6 +541,7 @@
     save('teamgen.teams', String(count));
     lastTeams = makeTeams(names, count);
     summaryEl.textContent = plural(names.length, 'name') + ' · ' + plural(count, 'team');
+    statusEl.textContent = 'Made ' + plural(count, 'team') + ': ' + teamsAsText().replace(/\n/g, '. ');
 
     var animate = opts.animate && motionOK();
     if (animate && !resultsEl.hidden && listEl.children.length) {
@@ -620,8 +642,9 @@
 
   var storedNames = load('teamgen.names');
   namesEl.value = storedNames && storedNames.trim() ? storedNames : SAMPLE;
-  teamsEl.value = Math.max(1, parseInt(load('teamgen.teams'), 10) || 2);
+  if (/Mac|iPhone|iPad/.test(navigator.platform || '')) document.querySelector('.hint-row kbd').textContent = '⌘';
   updateCount();
+  teamsEl.value = Math.min(Math.max(1, parseInt(load('teamgen.teams'), 10) || 2), Math.max(1, parseNames().length));
   generate();
 })();
 </script>
