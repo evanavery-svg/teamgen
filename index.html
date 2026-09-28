@@ -155,6 +155,16 @@
   .team li { overflow-wrap: anywhere; }
   .team li::marker { color: var(--muted); font-variant-numeric: tabular-nums; }
 
+  .site-footer {
+    display: flex; flex-wrap: wrap; gap: 8px 16px;
+    justify-content: space-between;
+    border-top: 1px solid var(--line);
+    padding-top: 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
   @media (max-width: 640px) {
     form { grid-template-columns: 1fr; }
     textarea { min-height: 160px; }
@@ -201,6 +211,11 @@
     </div>
     <div class="teams" id="teamList"></div>
   </section>
+
+  <footer class="site-footer">
+    <span>© 2026 Avery</span>
+    <span>v1.0</span>
+  </footer>
 </div>
 
 <script>
